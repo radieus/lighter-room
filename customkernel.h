@@ -26,6 +26,8 @@ public:
     //MainWindow *parentWindow;
 
     std::vector<std::vector<int> > values;
+    int getDivisor();
+    int getOffset();
 
 private slots:
     void on_pushButton_clicked();

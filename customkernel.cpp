@@ -44,6 +44,13 @@ void customkernel::get_values() {
     this->values = values;
 
 }
+int customkernel::getDivisor() {
+    return this->ui->lineEditFilterDivisor->text().toInt();
+}
+
+int customkernel::getOffset() {
+    return this->ui->lineEditFilterOffset->text().toInt();
+}
 
 void customkernel::on_pushButton_clicked()
 {

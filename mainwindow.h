@@ -49,7 +49,7 @@ private slots:
 
     void on_actionBox_blur_triggered();
 
-    void convolute(std::vector<std::vector <int> > kernel);
+    void convolute(std::vector<std::vector <int> > kernel, int offset = 0, int divisor = -1);
 
     void on_actionGaussian_blur_triggered();
 

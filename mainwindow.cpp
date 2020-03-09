@@ -119,7 +119,7 @@ void MainWindow::on_actionCorrect_gamma_triggered()
 }
 
 
-void MainWindow::convolute(std::vector<std::vector <int> > kernel){
+void MainWindow::convolute(std::vector<std::vector <int> > kernel, int offset, int divisor) {
 
     int dim_x = kernel.size();
     int dim_y = kernel[0].size();
@@ -135,15 +135,16 @@ void MainWindow::convolute(std::vector<std::vector <int> > kernel){
 
     int cols = image.width();
 
-    int weight = 0;
-    for (int i = 0; i<dim_x; i++) {
-        for (int j = 0; j<dim_y; j++) {
-            weight += kernel[i][j];
+    if (divisor == -1) {
+        for (int i = 0; i<dim_x; i++) {
+            for (int j = 0; j<dim_y; j++) {
+                divisor += kernel[i][j];
+            }
         }
-    }
 
-    if (weight <= 0)
-        weight = 1;
+        if (divisor <= 0)
+            divisor = 1;
+    }
 
     for (int p = 0; p < image.sizeInBytes(); p += 4) {
         for (int ch = 0; ch < 3; ch++) {
@@ -162,8 +163,6 @@ void MainWindow::convolute(std::vector<std::vector <int> > kernel){
                         sum += new_pix[p + ch];
                 }
             }*/
-
-
             for (int k = -dim_x_half; k <= dim_x_half; k++) {
                 for (int l = -dim_y_half; l <= dim_y_half; l++) {
 
@@ -176,7 +175,7 @@ void MainWindow::convolute(std::vector<std::vector <int> > kernel){
                 }
             }
 
-            *(new_pix+p+ch) = qBound(0, (int)(sum/weight), 255);
+            *(new_pix+p+ch) = qBound(0, (sum / divisor) + offset, 255);
         }
     }
 
@@ -207,7 +206,7 @@ void MainWindow::on_actionSharpen_triggered()
 void MainWindow::on_actionEdge_detection_triggered()
 {
     std::vector<std::vector<int>> kernel{{0, -1, 0}, {0, 1, 0}, {0, 0, 0}};
-    convolute(kernel);
+    convolute(kernel, 127);
 }
 
 void MainWindow::on_actionEmboss_triggered()
@@ -232,8 +231,11 @@ void MainWindow::on_actionCustom_kernel_triggered()
             custom_kernel->setModal(true);
             int diagCode = custom_kernel->exec();
 
-            if (diagCode == QDialog::Accepted)
-                convolute(custom_kernel->values);
+            if (diagCode == QDialog::Accepted) {
+                int offset = custom_kernel->getOffset();
+                int divisor = custom_kernel->getDivisor();
+                convolute(custom_kernel->values, offset, divisor);
+            }
             /*
             custom_kernel->get_values();
             std::vector<std::vector<int> > kernel = custom_kernel->values;
