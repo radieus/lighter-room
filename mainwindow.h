@@ -63,7 +63,7 @@ private slots:
 
     int getClosest(int val1, int val2, int target);
 
-    int findClosest(std::vector<double> arr, int n, int target);
+    int findClosest(std::vector<int> arr, int n, int target);
 
     void truncate(uchar* value);
 
