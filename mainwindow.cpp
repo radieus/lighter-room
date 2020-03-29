@@ -308,7 +308,7 @@ void MainWindow::diffuse(std::vector<std::vector<float> > matrix, int k) {
                 for (int j = -f_y_half; j <= f_y_half; ++j ){
                   //  if (matrix[i + f_x_half][j + f_y_half] == 0)
                   //      continue;
-                    *(new_pix + p + 4*cols*j + 4*i) = truncate(*(pix + p)) + error * matrix[i + f_x_half][j + f_y_half];
+                    *(new_pix + p + 4*cols*j + 4*i) = truncate(*(pix + p + 4*cols*j + 4*i)) + error * matrix[i + f_x_half][j + f_y_half];
 
                 }
             }
