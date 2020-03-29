@@ -224,13 +224,7 @@ void MainWindow::on_actionCustom_kernel_triggered()
                 int divisor = custom_kernel->getDivisor();
                 convolute(custom_kernel->values, offset, divisor);
             }
-            /*
-            custom_kernel->get_values();
-            std::vector<std::vector<int> > kernel = custom_kernel->values;
-            convolute(kernel);
-            */
-
-            }
+        }
     }
 }
 
@@ -296,13 +290,16 @@ void MainWindow::error_diffusion(std::vector<std::vector<float> > matrix, int k)
     for (int ch = 0; ch < 3; ch++) {
         for (int p = ch; p < image.sizeInBytes(); p += 4) {
 
-            error = *(pix + p) - findClosest(levels, levels.size(), *(pix + p));
-            *(new_pix + p) = findClosest(levels, levels.size(), *(pix + p));
+            int approx = findClosest(levels, levels.size(), *(pix + p));
+            error = *(pix + p) - approx;
+            *(new_pix + p) = approx;
 
             for (int i = -f_x_half; i <= f_x_half; ++i ) {
                 for (int j = -f_y_half; j <= f_y_half; ++j ) {
+
                    if (matrix[i + f_x_half][j + f_y_half] == 0)
                         continue;
+
                    if (p + 4*cols*j + 4*i < image.sizeInBytes() && p + 4*cols*j + 4*i >= 0)
                         *(pix + p + 4*cols*j + 4*i) = qBound(0.0, (double)*(pix + p + 4*cols*j + 4*i) + error * matrix[i + f_x_half][j + f_y_half], 255.0);
 
@@ -318,54 +315,83 @@ void MainWindow::error_diffusion(std::vector<std::vector<float> > matrix, int k)
 
 void MainWindow::on_actionFloyd_and_Steinberg_filter_triggered() //3x3
 {
-    int k = 4;
-    std::vector<std::vector<float> > matrix{{0.0, 0.0, 0.0},
-                                            {0.0, 0.0, 7.0/16.0},
-                                            {3.0/16.0, 5.0/16.0, 1.0/16.0}};
-    error_diffusion(matrix, k - 1);
+    bool ok;
+    int k;
 
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+
+    if (ok){
+        std::vector<std::vector<float> > matrix{{0.0, 0.0, 0.0},
+                                                {0.0, 0.0, 7.0/16.0},
+                                                {3.0/16.0, 5.0/16.0, 1.0/16.0}};
+        error_diffusion(matrix, k - 1);
+    }
 }
 
 void MainWindow::on_actionBurkes_Filter_triggered() //3x5
 {
-    int k = 2;
+    bool ok;
+    int k;
+
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+
+    if (ok){
     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0, 8.0/32.0, 4.0/32.0},
                                            {2.0/32.0, 4.0/32.0, 8.0/32.0, 4.0/32.0, 2.0/32.0}};
     error_diffusion(matrix, k - 1);
+    }
 }
 
 void MainWindow::on_actionStucky_Filter_triggered() //5x5
 {
-     int k = 2;
-     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
-                                            {0.0, 0.0, 0.0, 0.0, 0.0},
-                                            {0.0, 0.0, 0.0, 8.0/42.0, 4.0/42.0},
-                                            {2.0/42.0, 4.0/42.0, 8.0/42.0, 4.0/42.0, 2.0/42.0},
-                                            {1.0/42.0, 2.0/42.0, 4.0/42.0, 2.0/42.0, 1.0/42.0}};
-     error_diffusion(matrix, k - 1);
+    bool ok;
+    int k;
+
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+
+    if (ok){
+    std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
+                                           {0.0, 0.0, 0.0, 0.0, 0.0},
+                                           {0.0, 0.0, 0.0, 8.0/42.0, 4.0/42.0},
+                                           {2.0/42.0, 4.0/42.0, 8.0/42.0, 4.0/42.0, 2.0/42.0},
+                                           {1.0/42.0, 2.0/42.0, 4.0/42.0, 2.0/42.0, 1.0/42.0}};
+    error_diffusion(matrix, k - 1);
+    }
 }
 
 void MainWindow::on_actionSierra_Filter_triggered() //5x5
 {
-    int k = 2;
+    bool ok;
+    int k;
+
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+
+    if (ok){
     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0, 5.0/32.0, 3.0/32.0},
                                            {2.0/32.0, 4.0/32.0, 5.0/32.0, 4.0/32.0, 2.0/32.0},
                                            {0.0, 2.0/32.0, 3.0/32.0, 2.0/32.0, 0.0}};
     error_diffusion(matrix, k - 1);
+    }
 }
 
 void MainWindow::on_actionAtkinson_Filter_triggered() //5x5
 {
-    int k = 2;
+    bool ok;
+    int k;
+
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+
+    if (ok){
     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0, 0.0, 0.0},
                                            {0.0, 0.0, 0.0, 1.0/8.0, 1.0/8.0},
                                            {0.0, 1.0/8.0, 1.0/8.0, 1.0/8.0, 0.0},
                                            {0.0, 0.0, 1.0/8.0, 0.0, 0.0}};
     error_diffusion(matrix, k - 1);
+    }
 }
 
 void MainWindow::on_actionChange_to_grayscale_triggered()
@@ -388,34 +414,26 @@ void MainWindow::on_actionChange_to_grayscale_triggered()
 
 void MainWindow::on_actionUniform_Quantization_triggered()
 {
-       bool ok;
-       int idx = 0;
-       QImage image = current.toImage();
-       uchar* pix = image.bits();
+    bool ok;
+    QImage image = current.toImage();
+    uchar* pix = image.bits();
 
-       int intervals;
-       QString text = QInputDialog::getText(this, tr("Number of intervals"), tr("Number of Intervals:"), QLineEdit::Normal,"4", &ok);
-       if (ok){
-           intervals = text.toDouble();
-       }
-       else {
-           intervals = 4;
-       }
+    int divisions;
+    divisions = QInputDialog::getInt(this, tr("Intervals"), tr("Number of intervals:"), 2, 1, 20, 1, &ok);
 
-       int edge = 256.0/intervals;
-       for (int p = 0; p < image.sizeInBytes(); p += 4) {
-           for (int ch = 0; ch < 3; ch++) {
-           if(idx%4==3){
-               ++idx;
-               continue;
-           }
+    if (ok){
 
-           *pix = (((*pix)/edge) + 0.5)*edge;
-           ++idx;
+        double breaks = 256.0/divisions;
+        for (int p = 0; p < image.sizeInBytes(); p += 4) {
+            for (int ch = 0; ch < 3; ch++) {
 
-           }
+                *(pix+p+ch)= ((int)(*(pix+p+ch)/breaks) + 0.5)*breaks;
 
-           current = QPixmap::fromImage(image);
-           ui->finalLabel->setPixmap(current.scaled(ui->finalLabel->width(), ui->finalLabel->height(), Qt::KeepAspectRatio));
-       }
+            }
+        }
+    }
+
+    current = QPixmap::fromImage(image);
+    ui->finalLabel->setPixmap(current.scaled(ui->finalLabel->width(), ui->finalLabel->height(), Qt::KeepAspectRatio));
+
 }
