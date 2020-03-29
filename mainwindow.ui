@@ -15,6 +15,19 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="2">
+     <widget class="QLabel" name="finalLabel">
+      <property name="text">
+       <string>Edited image</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="margin">
+       <number>2</number>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="0">
      <widget class="QLabel" name="originalLabel">
       <property name="autoFillBackground">
@@ -27,19 +40,6 @@
       </property>
       <property name="text">
        <string>Original image</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="margin">
-       <number>2</number>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="2">
-     <widget class="QLabel" name="finalLabel">
-      <property name="text">
-       <string>Edited image</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -93,8 +93,19 @@
     <addaction name="separator"/>
     <addaction name="actionRestore"/>
    </widget>
+   <widget class="QMenu" name="menuDiffusion">
+    <property name="title">
+     <string>Diffusion</string>
+    </property>
+    <addaction name="actionFloyd_and_Steinberg_filter"/>
+    <addaction name="actionBurkes_Filter"/>
+    <addaction name="actionStucky_Filter"/>
+    <addaction name="actionSierra_Filter"/>
+    <addaction name="actionAtkinson_Filter"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
+   <addaction name="menuDiffusion"/>
   </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="enabled">
@@ -214,6 +225,31 @@
   <action name="actionCustom_kernel">
    <property name="text">
     <string>Custom kernel</string>
+   </property>
+  </action>
+  <action name="actionFloyd_and_Steinberg_filter">
+   <property name="text">
+    <string>Floyd and Steinberg Filter</string>
+   </property>
+  </action>
+  <action name="actionBurkes_Filter">
+   <property name="text">
+    <string>Burkes Filter</string>
+   </property>
+  </action>
+  <action name="actionStucky_Filter">
+   <property name="text">
+    <string>Stucky Filter</string>
+   </property>
+  </action>
+  <action name="actionSierra_Filter">
+   <property name="text">
+    <string>Sierra Filter</string>
+   </property>
+  </action>
+  <action name="actionAtkinson_Filter">
+   <property name="text">
+    <string>Atkinson Filter</string>
    </property>
   </action>
  </widget>

@@ -61,6 +61,24 @@ private slots:
 
     void on_actionCustom_kernel_triggered();
 
+    int getClosest(int val1, int val2, int target);
+
+    int findClosest(std::vector<double> arr, int n, int target);
+
+    void truncate(uchar* value);
+
+    void diffuse(std::vector<std::vector<float> > kernel, int k);
+
+    void on_actionFloyd_and_Steinberg_filter_triggered();
+
+    void on_actionAtkinson_Filter_triggered();
+
+    void on_actionBurkes_Filter_triggered();
+
+    void on_actionStucky_Filter_triggered();
+
+    void on_actionSierra_Filter_triggered();
+
 private:
     Ui::MainWindow *ui;
 };
