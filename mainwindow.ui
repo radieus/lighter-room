@@ -102,6 +102,8 @@
     <addaction name="actionStucky_Filter"/>
     <addaction name="actionSierra_Filter"/>
     <addaction name="actionAtkinson_Filter"/>
+    <addaction name="separator"/>
+    <addaction name="actionChange_to_grayscale"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
@@ -250,6 +252,11 @@
   <action name="actionAtkinson_Filter">
    <property name="text">
     <string>Atkinson Filter</string>
+   </property>
+  </action>
+  <action name="actionChange_to_grayscale">
+   <property name="text">
+    <string>Change to grayscale...</string>
    </property>
   </action>
  </widget>

@@ -79,6 +79,8 @@ private slots:
 
     void on_actionSierra_Filter_triggered();
 
+    void on_actionChange_to_grayscale_triggered();
+
 private:
     Ui::MainWindow *ui;
 };

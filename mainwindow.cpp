@@ -308,7 +308,7 @@ void MainWindow::diffuse(std::vector<std::vector<float> > matrix, int k) {
                 for (int j = -f_y_half; j <= f_y_half; ++j ){
                   //  if (matrix[i + f_x_half][j + f_y_half] == 0)
                   //      continue;
-                    *(new_pix + p + 4*cols*j + 4*i) = truncate(*(pix + p + 4*cols*j + 4*i)) + error * matrix[i + f_x_half][j + f_y_half];
+                   // *(new_pix + p + 4*cols*j + 4*i) = truncate((pix + p + 4*cols*j + 4*i)) + error * matrix[i + f_x_half][j + f_y_half];
 
                 }
             }
@@ -368,3 +368,22 @@ void MainWindow::on_actionAtkinson_Filter_triggered() //5x5
 //S[x+i][y+j] += error*filter[i+f_x][j+f_y];
 
 
+
+void MainWindow::on_actionChange_to_grayscale_triggered()
+{
+    QImage image = current.toImage();
+    uchar* pix = image.bits();
+    uchar* end = pix + 4 * image.width() * image.height();
+
+    for(; pix < end; pix += 4){
+        int color = *pix * 0.3 + *(pix+1) * 0.6 + *(pix+2) * 0.1;
+        *pix = color;
+        *(pix+1) = color;
+        *(pix+2) = color;
+
+      }
+
+    current = QPixmap::fromImage(image);
+    ui->finalLabel->setPixmap(current.scaled(ui->finalLabel->width(), ui->finalLabel->height(), Qt::KeepAspectRatio));
+
+}
