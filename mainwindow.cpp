@@ -243,7 +243,7 @@ int MainWindow::getClosest(int val1, int val2, int target)
         return val1;
 }
 
-int MainWindow::findClosest(std::vector<double> vec, int n, int target)
+int MainWindow::findClosest(std::vector<int> vec, int n, int target)
 {
     if (target <= vec[0])
         return vec[0];
@@ -287,29 +287,30 @@ void MainWindow::diffuse(std::vector<std::vector<float> > matrix, int k) {
     uchar* pix = image.bits();
     uchar* new_pix = new_image.bits();
 
-    int f_x_half = matrix.size()/2;
-    int f_y_half = matrix[0].size()/2;
+    int f_x_half = matrix.size() / 2;
+    int f_y_half = matrix[0].size() / 2;
 
-    std::vector<double> levels;
-    double breaks = 1.0/k;
-    for(int i = 0; i < k + 1; ++i) {
-        levels.push_back(std::floor(i*breaks*255));
+    std::vector<int> levels;
+    double breaks = 1.0 / k;
+    for (int i = 0; i < k + 1; ++i) {
+        levels.push_back(std::floor(i * breaks * 255));
     }
 
     int cols = image.width();
     int error = 0;
 
-    for (int ch = 0; ch < 3; ch++){
+    for (int ch = 0; ch < 3; ch++) {
         for (int p = ch; p < image.sizeInBytes(); p += 4) {
 
             error = *(pix + p) - findClosest(levels, levels.size(), *(pix + p));
+            *(new_pix + p) = findClosest(levels, levels.size(), *(pix + p));
 
             for (int i = -f_x_half; i <= f_x_half; ++i ){
                 for (int j = -f_y_half; j <= f_y_half; ++j ){
-                  //  if (matrix[i + f_x_half][j + f_y_half] == 0)
-                  //      continue;
-                   // *(new_pix + p + 4*cols*j + 4*i) = truncate((pix + p + 4*cols*j + 4*i)) + error * matrix[i + f_x_half][j + f_y_half];
-
+                    if (matrix[i + f_x_half][j + f_y_half] == 0)
+                        continue;
+                    if ((p + 4*cols*j + 4*i < image.sizeInBytes()) && (p + 4*cols*j + 4*i >= 0))
+                        *(pix + p + 4*cols*j + 4*i) = qBound(0.0, (double)*(pix + p + 4*cols*j + 4*i) + error * matrix[i + f_x_half][j + f_y_half], 255.0);
                 }
             }
 
@@ -318,7 +319,6 @@ void MainWindow::diffuse(std::vector<std::vector<float> > matrix, int k) {
 
     current = QPixmap::fromImage(new_image);
     ui->finalLabel->setPixmap(current.scaled(ui->finalLabel->width(), ui->finalLabel->height(), Qt::KeepAspectRatio));
-
 }
 
 void MainWindow::on_actionFloyd_and_Steinberg_filter_triggered() //3x3
