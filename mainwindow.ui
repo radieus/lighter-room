@@ -97,6 +97,8 @@
     <property name="title">
      <string>Diffusion</string>
     </property>
+    <addaction name="actionUniform_Quantization"/>
+    <addaction name="separator"/>
     <addaction name="actionFloyd_and_Steinberg_filter"/>
     <addaction name="actionBurkes_Filter"/>
     <addaction name="actionStucky_Filter"/>
@@ -257,6 +259,11 @@
   <action name="actionChange_to_grayscale">
    <property name="text">
     <string>Change to grayscale...</string>
+   </property>
+  </action>
+  <action name="actionUniform_Quantization">
+   <property name="text">
+    <string>Uniform Quantization</string>
    </property>
   </action>
  </widget>

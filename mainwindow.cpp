@@ -243,7 +243,7 @@ int MainWindow::getClosest(int val1, int val2, int target)
         return val1;
 }
 
-int MainWindow::findClosest(std::vector<double> vec, int n, int target)
+int MainWindow::findClosest(std::vector<int> vec, int n, int target)
 {
     if (target <= vec[0])
         return vec[0];
@@ -272,14 +272,8 @@ int MainWindow::findClosest(std::vector<double> vec, int n, int target)
     return vec[mid];
 }
 
-void MainWindow::truncate(uchar* value){
-    if(*value < 0)
-       *value = 0;
-    if(*value > 255)
-       *value = 255;
-}
 
-void MainWindow::diffuse(std::vector<std::vector<float> > matrix, int k) {
+void MainWindow::error_diffusion(std::vector<std::vector<float> > matrix, int k) {
 
     QImage image = current.toImage();
     QImage new_image = current.toImage();
@@ -287,32 +281,33 @@ void MainWindow::diffuse(std::vector<std::vector<float> > matrix, int k) {
     uchar* pix = image.bits();
     uchar* new_pix = new_image.bits();
 
-    int f_x_half = matrix.size()/2;
-    int f_y_half = matrix[0].size()/2;
+    int f_x_half = matrix.size() / 2;
+    int f_y_half = matrix[0].size() / 2;
 
-    std::vector<double> levels;
+    std::vector<int> levels;
     double breaks = 1.0/k;
-    for(int i = 0; i < k + 1; ++i) {
-        levels.push_back(std::floor(i*breaks*255));
+    for (int i = 0; i < k + 1; ++i) {
+        levels.push_back(std::floor(i * breaks * 255));
     }
 
     int cols = image.width();
     int error = 0;
 
-    for (int ch = 0; ch < 3; ch++){
+    for (int ch = 0; ch < 3; ch++) {
         for (int p = ch; p < image.sizeInBytes(); p += 4) {
 
             error = *(pix + p) - findClosest(levels, levels.size(), *(pix + p));
+            *(new_pix + p) = findClosest(levels, levels.size(), *(pix + p));
 
-            for (int i = -f_x_half; i <= f_x_half; ++i ){
-                for (int j = -f_y_half; j <= f_y_half; ++j ){
-                  //  if (matrix[i + f_x_half][j + f_y_half] == 0)
-                  //      continue;
-                   // *(new_pix + p + 4*cols*j + 4*i) = truncate((pix + p + 4*cols*j + 4*i)) + error * matrix[i + f_x_half][j + f_y_half];
+            for (int i = -f_x_half; i <= f_x_half; ++i ) {
+                for (int j = -f_y_half; j <= f_y_half; ++j ) {
+                   if (matrix[i + f_x_half][j + f_y_half] == 0)
+                        continue;
+                   if (p + 4*cols*j + 4*i < image.sizeInBytes() && p + 4*cols*j + 4*i >= 0)
+                        *(pix + p + 4*cols*j + 4*i) = qBound(0.0, (double)*(pix + p + 4*cols*j + 4*i) + error * matrix[i + f_x_half][j + f_y_half], 255.0);
 
                 }
             }
-
         }
     }
 
@@ -324,50 +319,54 @@ void MainWindow::diffuse(std::vector<std::vector<float> > matrix, int k) {
 void MainWindow::on_actionFloyd_and_Steinberg_filter_triggered() //3x3
 {
     int k = 4;
-    std::vector<std::vector<float> > matrix{{0.0, 0.0, 0.0}, {0.0, 0.0, 7.0/16.0}, {3.0/16.0, 5.0/16.0, 1.0/16.0}};
-    diffuse(matrix, k);
+    std::vector<std::vector<float> > matrix{{0.0, 0.0, 0.0},
+                                            {0.0, 0.0, 7.0/16.0},
+                                            {3.0/16.0, 5.0/16.0, 1.0/16.0}};
+    error_diffusion(matrix, k - 1);
 
 }
 
 void MainWindow::on_actionBurkes_Filter_triggered() //3x5
 {
     int k = 2;
-    std::vector<std::vector<float>> kernel{{0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 8.0/32.0, 4.0/32.0}, {2.0/32.0, 4.0/32.0, 8.0/32.0, 4.0/32.0, 2.0/32.0}};
-    diffuse(kernel, k);
+    std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
+                                           {0.0, 0.0, 0.0, 8.0/32.0, 4.0/32.0},
+                                           {2.0/32.0, 4.0/32.0, 8.0/32.0, 4.0/32.0, 2.0/32.0}};
+    error_diffusion(matrix, k - 1);
 }
 
 void MainWindow::on_actionStucky_Filter_triggered() //5x5
 {
      int k = 2;
-     std::vector<std::vector<float>> kernel{{0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 8.0/42.0, 4.0/42.0}, {2.0/42.0, 4.0/42.0, 8.0/42.0, 4.0/42.0, 2.0/42.0}, {1.0/42.0, 2.0/42.0, 4.0/42.0, 2.0/42.0, 1.0/42.0}};
-     diffuse(kernel, k);
+     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
+                                            {0.0, 0.0, 0.0, 0.0, 0.0},
+                                            {0.0, 0.0, 0.0, 8.0/42.0, 4.0/42.0},
+                                            {2.0/42.0, 4.0/42.0, 8.0/42.0, 4.0/42.0, 2.0/42.0},
+                                            {1.0/42.0, 2.0/42.0, 4.0/42.0, 2.0/42.0, 1.0/42.0}};
+     error_diffusion(matrix, k - 1);
 }
 
 void MainWindow::on_actionSierra_Filter_triggered() //5x5
 {
     int k = 2;
-    std::vector<std::vector<float>> kernel{{0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 5.0/32.0, 3.0/32.0}, {2.0/32.0, 4.0/32.0, 5.0/32.0, 4.0/32.0, 2.0/32.0}, {0.0, 2.0/32.0, 3.0/32.0, 2.0/32.0, 0.0}};
-    diffuse(kernel, k);
+    std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
+                                           {0.0, 0.0, 0.0, 0.0, 0.0},
+                                           {0.0, 0.0, 0.0, 5.0/32.0, 3.0/32.0},
+                                           {2.0/32.0, 4.0/32.0, 5.0/32.0, 4.0/32.0, 2.0/32.0},
+                                           {0.0, 2.0/32.0, 3.0/32.0, 2.0/32.0, 0.0}};
+    error_diffusion(matrix, k - 1);
 }
 
 void MainWindow::on_actionAtkinson_Filter_triggered() //5x5
 {
     int k = 2;
-    std::vector<std::vector<float>> kernel{{0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 1.0/8.0, 1.0/8.0}, {0.0, 1.0/8.0, 1.0/8.0, 1.0/8.0, 0.0}, {0.0, 0.0, 1.0/8.0, 0.0, 0.0}};
-    diffuse(kernel, k);
+    std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
+                                           {0.0, 0.0, 0.0, 0.0, 0.0},
+                                           {0.0, 0.0, 0.0, 1.0/8.0, 1.0/8.0},
+                                           {0.0, 1.0/8.0, 1.0/8.0, 1.0/8.0, 0.0},
+                                           {0.0, 0.0, 1.0/8.0, 0.0, 0.0}};
+    error_diffusion(matrix, k - 1);
 }
-
-
-////float filter[2*f_x+1][2*f_y+1] - filter matrix
-////Approximate S with a displayable intensity
-//K = Approximate(S[x][y])
-//I[x][y] = K //Draw pixel
-//error = S[x][y] - K //Calculate the error
-//for ( i = -f_x; i <= f_x; ++i )
-//for ( j = -f_y; j <= f_y; ++j )
-//S[x+i][y+j] += error*filter[i+f_x][j+f_y];
-
-
 
 void MainWindow::on_actionChange_to_grayscale_triggered()
 {
@@ -380,10 +379,43 @@ void MainWindow::on_actionChange_to_grayscale_triggered()
         *pix = color;
         *(pix+1) = color;
         *(pix+2) = color;
-
       }
 
     current = QPixmap::fromImage(image);
     ui->finalLabel->setPixmap(current.scaled(ui->finalLabel->width(), ui->finalLabel->height(), Qt::KeepAspectRatio));
 
+}
+
+void MainWindow::on_actionUniform_Quantization_triggered()
+{
+       bool ok;
+       int idx = 0;
+       QImage image = current.toImage();
+       uchar* pix = image.bits();
+
+       int intervals;
+       QString text = QInputDialog::getText(this, tr("Number of intervals"), tr("Number of Intervals:"), QLineEdit::Normal,"4", &ok);
+       if (ok){
+           intervals = text.toDouble();
+       }
+       else {
+           intervals = 4;
+       }
+
+       int edge = 256.0/intervals;
+       for (int p = 0; p < image.sizeInBytes(); p += 4) {
+           for (int ch = 0; ch < 3; ch++) {
+           if(idx%4==3){
+               ++idx;
+               continue;
+           }
+
+           *pix = (((*pix)/edge) + 0.5)*edge;
+           ++idx;
+
+           }
+
+           current = QPixmap::fromImage(image);
+           ui->finalLabel->setPixmap(current.scaled(ui->finalLabel->width(), ui->finalLabel->height(), Qt::KeepAspectRatio));
+       }
 }
