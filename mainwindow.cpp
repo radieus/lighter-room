@@ -274,9 +274,12 @@ void MainWindow::error_diffusion(std::vector<std::vector<float> > matrix, int k)
 
     uchar* pix = image.bits();
     uchar* new_pix = new_image.bits();
+    uchar* newer_pix = new_image.bits();
 
     int f_x_half = matrix.size() / 2;
     int f_y_half = matrix[0].size() / 2;
+
+
 
     std::vector<int> levels;
     double breaks = 1.0/k;
@@ -287,8 +290,10 @@ void MainWindow::error_diffusion(std::vector<std::vector<float> > matrix, int k)
     int cols = image.width();
     int error = 0;
 
+
     for (int ch = 0; ch < 3; ch++) {
         for (int p = ch; p < image.sizeInBytes(); p += 4) {
+
 
             int approx = findClosest(levels, levels.size(), *(pix + p));
             error = *(pix + p) - approx;
@@ -313,12 +318,100 @@ void MainWindow::error_diffusion(std::vector<std::vector<float> > matrix, int k)
 
 }
 
+void MainWindow::error_diffusion_ycbcr(std::vector<std::vector<float> > matrix, int k) {
+
+    QImage image = current.toImage();
+    QImage new_image = current.toImage();
+
+    uchar* pix = image.bits();
+    uchar* tmp = pix;
+    uchar* new_pix = new_image.bits();
+
+    uchar* end = pix + 4 * image.width() * image.height();
+
+    int f_x_half = matrix.size() / 2;
+    int f_y_half = matrix[0].size() / 2;
+
+    std::vector<int> levels;
+    double breaks = 1.0/k;
+    for (int i = 0; i < k + 1; ++i) {
+        levels.push_back(std::floor(i * breaks * 255));
+    }
+
+    int cols = image.width();
+    int error = 0;
+
+    while(pix<end){
+
+        //qDebug() << "to ycbcr";
+        //qDebug() << *(pix) << *(pix+1) << *(pix+2);
+
+        double y = qBound(16.0, 16.0 + 1.0/256.0 * (65.738 * *(pix) + 129.057 * *(pix+1) + 25.064 * *(pix+2)), 235.0);
+        double cb = qBound(16.0, 128.0 + 1.0/256.0 * (-37.945 * *(pix) - 74.494 * *(pix+1) + 112.439 * *(pix+2)), 240.0);
+        double cr = qBound(16.0, 128.0 + 1.0/256.0 * ( 112.439 * *(pix) - 94.154 * *(pix+1) - 18.285 * *(pix+2)), 240.0);
+
+        *(pix) = y;
+        *(pix + 1) = cb;
+        *(pix + 2) = cr;
+
+        //qDebug() << *(pix) << *(pix+1) << *(pix+2);
+
+        pix += 4;
+
+    }
+
+    pix = tmp;
+
+    for (int ch = 0; ch < 3; ch++) {
+        for (int p = ch; p < image.sizeInBytes(); p += 4) {
+
+            int approx = findClosest(levels, levels.size(), *(pix + p));
+            error = *(pix + p) - approx;
+            *(new_pix + p) = approx;
+
+            for (int i = -f_x_half; i <= f_x_half; ++i ) {
+                for (int j = -f_y_half; j <= f_y_half; ++j ) {
+
+                   if (matrix[i + f_x_half][j + f_y_half] == 0)
+                        continue;
+
+                   if ((p + 4*cols*j + 4*i < image.sizeInBytes()) && (p + 4*cols*j + 4*i >= 0))
+                        *(pix + p + 4*cols*j + 4*i) = qBound(0.0, (double)*(pix + p + 4*cols*j + 4*i) + error * matrix[i + f_x_half][j + f_y_half], 255.0);
+
+                }
+            }
+        }
+    }
+
+    uchar* new_end = new_pix + 4 * image.width() * image.height();
+
+    while(new_pix<new_end){
+
+      //qDebug() << "to rgb";
+
+        double r = ( 298.082 * *(new_pix) + 408.583 * *(new_pix + 2) ) / 256.0 - 222.921;
+        double g = ( 298.082 * *(new_pix) - 100.291 * *(new_pix + 1) - 208.120 * *(new_pix + 2) ) / 256 + 135.576;
+        double b = ( 298.082 * *(new_pix) + 516.412 * *(new_pix + 1) ) / 256.0 - 276.836;
+
+        *(new_pix) = (int)qBound(0.0, r, 255.0);
+        *(new_pix + 1) = (int)qBound(0.0, g, 255.0);
+        *(new_pix + 2) = (int)qBound(0.0, b, 255.0);
+
+        new_pix += 4;
+
+    }
+
+    current = QPixmap::fromImage(new_image);
+    ui->finalLabel->setPixmap(current.scaled(ui->finalLabel->width(), ui->finalLabel->height(), Qt::KeepAspectRatio));
+
+}
+
 void MainWindow::on_actionFloyd_and_Steinberg_filter_triggered() //3x3
 {
     bool ok;
     int k;
 
-    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 100, 1, &ok);
 
     if (ok){
         std::vector<std::vector<float> > matrix{{0.0, 0.0, 0.0},
@@ -333,7 +426,7 @@ void MainWindow::on_actionBurkes_Filter_triggered() //3x5
     bool ok;
     int k;
 
-    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 100, 1, &ok);
 
     if (ok){
     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
@@ -348,7 +441,7 @@ void MainWindow::on_actionStucky_Filter_triggered() //5x5
     bool ok;
     int k;
 
-    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 100, 1, &ok);
 
     if (ok){
     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
@@ -365,7 +458,7 @@ void MainWindow::on_actionSierra_Filter_triggered() //5x5
     bool ok;
     int k;
 
-    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 100, 1, &ok);
 
     if (ok){
     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
@@ -382,7 +475,7 @@ void MainWindow::on_actionAtkinson_Filter_triggered() //5x5
     bool ok;
     int k;
 
-    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 20, 1, &ok);
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 100, 1, &ok);
 
     if (ok){
     std::vector<std::vector<float>> matrix{{0.0, 0.0, 0.0, 0.0, 0.0},
@@ -419,7 +512,7 @@ void MainWindow::on_actionUniform_Quantization_triggered()
     uchar* pix = image.bits();
 
     int divisions;
-    divisions = QInputDialog::getInt(this, tr("Intervals"), tr("Number of intervals:"), 2, 1, 20, 1, &ok);
+    divisions = QInputDialog::getInt(this, tr("Intervals"), tr("Number of intervals:"), 2, 1, 100, 1, &ok);
 
     if (ok){
 
@@ -437,3 +530,21 @@ void MainWindow::on_actionUniform_Quantization_triggered()
     ui->finalLabel->setPixmap(current.scaled(ui->finalLabel->width(), ui->finalLabel->height(), Qt::KeepAspectRatio));
 
 }
+
+void MainWindow::on_actionYCbCr_diffusion_triggered()
+{
+
+    bool ok;
+    int k;
+
+    k = QInputDialog::getInt(this, tr("Levels"), tr("Number of levels:"), 2, 1, 100, 1, &ok);
+
+    if (ok){
+        std::vector<std::vector<float> > matrix{{0.0, 0.0, 0.0},
+                                                {0.0, 0.0, 7.0/16.0},
+                                                {3.0/16.0, 5.0/16.0, 1.0/16.0}};
+        error_diffusion_ycbcr(matrix, k - 1);
+    }
+
+}
+

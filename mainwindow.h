@@ -67,6 +67,8 @@ private slots:
 
     void error_diffusion(std::vector<std::vector<float> > kernel, int k);
 
+    void error_diffusion_ycbcr(std::vector<std::vector<float> > kernel, int k);
+
     void on_actionFloyd_and_Steinberg_filter_triggered();
 
     void on_actionAtkinson_Filter_triggered();
@@ -80,6 +82,8 @@ private slots:
     void on_actionChange_to_grayscale_triggered();
 
     void on_actionUniform_Quantization_triggered();
+
+    void on_actionYCbCr_diffusion_triggered();
 
 private:
     Ui::MainWindow *ui;

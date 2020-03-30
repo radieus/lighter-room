@@ -106,6 +106,8 @@
     <addaction name="actionAtkinson_Filter"/>
     <addaction name="separator"/>
     <addaction name="actionChange_to_grayscale"/>
+    <addaction name="separator"/>
+    <addaction name="actionYCbCr_diffusion"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
@@ -264,6 +266,11 @@
   <action name="actionUniform_Quantization">
    <property name="text">
     <string>Uniform Quantization</string>
+   </property>
+  </action>
+  <action name="actionYCbCr_diffusion">
+   <property name="text">
+    <string>YCbCr diffusion...</string>
    </property>
   </action>
  </widget>
